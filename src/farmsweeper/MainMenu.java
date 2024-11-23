@@ -1,4 +1,3 @@
-
 package farmsweeper;
 
 import javax.swing.*;
@@ -7,10 +6,11 @@ import java.awt.event.*;
 import javax.imageio.ImageIO;
 import java.io.File;
 import java.awt.image.BufferedImage;
+import java.sql.*;
 
 public class MainMenu extends JFrame {
 
-private JButton normalModeButton;
+    private JButton normalModeButton;
     private JButton customModeButton;
     private JButton achieveButton;
     private JButton leaderButton;
@@ -19,23 +19,42 @@ private JButton normalModeButton;
     private CardLayout cardLayout;
 
     public MainMenu() {
-        
+
         setTitle("FarmSweeper");
-        setSize(810, 655);  
+        setSize(810, 655);
         setResizable(false);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setLocationRelativeTo(null);  
+        setLocationRelativeTo(null);
+
+        // Test database connection on start
+        if (isDatabaseConnected()) {
+            JOptionPane.showMessageDialog(this, "Database connected successfully!", "Connection Status", JOptionPane.INFORMATION_MESSAGE);
+        } else {
+            JOptionPane.showMessageDialog(this, "Failed to connect to the database.", "Connection Status", JOptionPane.ERROR_MESSAGE);
+        }
 
         cardLayout = new CardLayout();
         cardPanel = new JPanel(cardLayout);
 
         JPanel mainMenuPanel = createMainMenuPanel();
 
+        // Normal Mode Section
         NormalMode normalModePanelClass = new NormalMode();
         JPanel normalModePanel = normalModePanelClass.createNormalModePanel(cardLayout, cardPanel);
 
+        // Custom Mode Section
         CustomMode customModePanelClass = new CustomMode();
         JPanel customModePanel = customModePanelClass.createCustomModePanel(cardLayout, cardPanel);
+
+        // Panels for other modes
+        Gameboard gameboardPanelClass = new Gameboard();
+        JPanel gameboardPanel = gameboardPanelClass.createGameboardPanel(cardLayout, cardPanel);
+
+        CustomGameWin customGameWinPanelClass = new CustomGameWin();
+        JPanel customgamewinPanel = customGameWinPanelClass.createWinPanel(cardLayout, cardPanel);
+
+        CustomGameLose customGameLosePanelClass = new CustomGameLose();
+        JPanel customgamelosePanel = customGameLosePanelClass.createLosePanel(cardLayout, cardPanel);
 
         Achievements achievementsPanelClass = new Achievements();
         JPanel achievementsModePanel = achievementsPanelClass.createAchievementsPanel(cardLayout, cardPanel);
@@ -43,9 +62,13 @@ private JButton normalModeButton;
         Leaderboard leaderboardPanelClass = new Leaderboard();
         JPanel leaderboardModePanel = leaderboardPanelClass.createLeaderboardPanel(cardLayout, cardPanel);
 
+        // Add panels to CardLayout
         cardPanel.add(mainMenuPanel, "Main Menu");
         cardPanel.add(normalModePanel, "Normal Mode");
         cardPanel.add(customModePanel, "Custom Mode");
+        cardPanel.add(gameboardPanel, "Gameboard");
+        cardPanel.add(customgamewinPanel, "Custom Game Win");
+        cardPanel.add(customgamelosePanel, "Custom Game Lose");
         cardPanel.add(achievementsModePanel, "Achievements");
         cardPanel.add(leaderboardModePanel, "Leaderboard");
 
@@ -58,17 +81,17 @@ private JButton normalModeButton;
         JLayeredPane layeredPane = new JLayeredPane();
         layeredPane.setLayout(null);
 
+        // Background
         ImageIcon backgroundIcon = new ImageIcon("main.png");
         JLabel backgroundLabel = new JLabel(backgroundIcon);
-
         Image image = backgroundIcon.getImage();
         Image scaledImage = image.getScaledInstance(815, 620, Image.SCALE_SMOOTH);
         backgroundLabel.setIcon(new ImageIcon(scaledImage));
-
         backgroundLabel.setBounds(0, 0, 815, 620);
         layeredPane.add(backgroundLabel, JLayeredPane.DEFAULT_LAYER);
 
-        normalModeButton = new JButton();
+        // Buttons
+         normalModeButton = new JButton();
         try {
             BufferedImage buttonIcon = ImageIO.read(new File("normalMode.png"));
             ImageIcon buttonImageIcon = new ImageIcon(buttonIcon);
@@ -189,9 +212,12 @@ private JButton normalModeButton;
         } else {
             System.out.println("Exit cancelled.");
         }
-    }
-});
+        }
+        });
 
+       
+
+        // Add buttons to the panel
         layeredPane.add(normalModeButton, JLayeredPane.PALETTE_LAYER);
         layeredPane.add(customModeButton, JLayeredPane.PALETTE_LAYER);
         layeredPane.add(achieveButton, JLayeredPane.PALETTE_LAYER);
@@ -199,7 +225,48 @@ private JButton normalModeButton;
         layeredPane.add(exitButton, JLayeredPane.PALETTE_LAYER);
 
         JPanel panel = new JPanel(new BorderLayout());
-        panel.add(layeredPane, BorderLayout.CENTER);  
+        panel.add(layeredPane, BorderLayout.CENTER);
         return panel;
     }
+
+    private JButton createButton(String iconPath, int x, int y, ActionListener action) {
+        JButton button = new JButton();
+        try {
+            BufferedImage buttonIcon = ImageIO.read(new File(iconPath));
+            ImageIcon buttonImageIcon = new ImageIcon(buttonIcon);
+            button.setIcon(buttonImageIcon);
+            button.setText("");
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            JOptionPane.showMessageDialog(this, "Error loading image for button: " + iconPath, "Error", JOptionPane.ERROR_MESSAGE);
+        }
+        button.setBounds(x, y, 323, 85);
+        button.setBorderPainted(false);
+        button.setFocusPainted(false);
+        button.setContentAreaFilled(false);
+        button.addActionListener(action);
+        return button;
+    }
+
+    private void exitGame() {
+        int choice = JOptionPane.showConfirmDialog(this, "Do you want to exit the game?", "Exit Game",
+                JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+        if (choice == JOptionPane.YES_OPTION) {
+            System.exit(0);
+        }
+    }
+
+    private boolean isDatabaseConnected() {
+        try (Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/farmsweeper", "root", "")) {
+            if (conn != null) {
+                System.out.println("Database connection successful!");
+                return true;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    
 }
