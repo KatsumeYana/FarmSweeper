@@ -45,8 +45,8 @@ public class CustomMode {
             setSelectedTheme(themes[currentThemeIndex]); // Save the selected theme
             System.out.println("Selected theme: " + selectedTheme); // Debugging log
 
-            // Dynamically rebuild the Gameboard panel
-            cardPanel.add(new Gameboard().createGameboardPanel(cardLayout, cardPanel), "Gameboard");
+            // Dynamically rebuild the GameboardGameLogic panel
+            cardPanel.add(new GameboardGameLogic().createGameboardPanel(cardLayout, cardPanel), "Gameboard");
 
             cardLayout.show(cardPanel, "Gameboard");
         });

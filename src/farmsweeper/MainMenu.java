@@ -47,7 +47,7 @@ public class MainMenu extends JFrame {
         JPanel customModePanel = customModePanelClass.createCustomModePanel(cardLayout, cardPanel);
 
         // Panels for other modes
-        Gameboard gameboardPanelClass = new Gameboard();
+        GameboardGameLogic gameboardPanelClass = new GameboardGameLogic();
         JPanel gameboardPanel = gameboardPanelClass.createGameboardPanel(cardLayout, cardPanel);
 
         CustomGameWin customGameWinPanelClass = new CustomGameWin();
