@@ -9,10 +9,15 @@ import java.io.File;
 public class CustomMode {
 
     private JLabel themeLabel;
+    private JLabel difficultyLabel;
     private String[] themes = {"Spring", "Summer", "Autumn"};
+    private String[] difficulties = {"Easy", "Normal", "Hard"};
     private int currentThemeIndex = 0;
+    private int currentDifficultyIndex = 1; // Default to Normal
     private static String selectedTheme = "Default";
+    private static String selectedDifficulty = "Normal";
 
+    
     public JPanel createCustomModePanel(CardLayout cardLayout, JPanel cardPanel) {
         JPanel panel = new JPanel(null);
 
@@ -38,21 +43,47 @@ public class CustomMode {
         panel.add(themeLeftBtn);
         panel.add(themeRightBtn);
 
+        // Difficulty Selection
+        difficultyLabel = new JLabel(difficulties[currentDifficultyIndex], SwingConstants.CENTER);
+        difficultyLabel.setBounds(520, 370, 100, 30);
+        JButton difficultyLeftBtn = new JButton("<");
+        difficultyLeftBtn.setBounds(485, 350, 50, 70);
+        JButton difficultyRightBtn = new JButton(">");
+        difficultyRightBtn.setBounds(600, 350, 50, 70);
+
+        difficultyLeftBtn.addActionListener(e -> {
+            currentDifficultyIndex = (currentDifficultyIndex - 1 + difficulties.length) % difficulties.length;
+            difficultyLabel.setText(difficulties[currentDifficultyIndex]);
+        });
+
+        difficultyRightBtn.addActionListener(e -> {
+            currentDifficultyIndex = (currentDifficultyIndex + 1) % difficulties.length;
+            difficultyLabel.setText(difficulties[currentDifficultyIndex]);
+        });
+
+        panel.add(difficultyLabel);
+        panel.add(difficultyLeftBtn);
+        panel.add(difficultyRightBtn);
+
         // Start Game Button
         JButton startButton = new JButton("Start Game");
         startButton.setBounds(650, 550, 100, 50);
         startButton.addActionListener(e -> {
             setSelectedTheme(themes[currentThemeIndex]); // Save the selected theme
+            setSelectedDifficulty(difficulties[currentDifficultyIndex]); // Save the selected difficulty
             System.out.println("Selected theme: " + selectedTheme); // Debugging log
+            System.out.println("Selected difficulty: " + selectedDifficulty); // Debugging log
 
+            GameboardGameLogic gameboard = new GameboardGameLogic(selectedDifficulty);
+            JPanel gameboardPanel = gameboard.createGameboardPanel(cardLayout, cardPanel);
             // Dynamically rebuild the GameboardGameLogic panel
-            cardPanel.add(new GameboardGameLogic().createGameboardPanel(cardLayout, cardPanel), "Gameboard");
+            cardPanel.add(gameboard.createGameboardPanel(cardLayout, cardPanel), "Gameboard");
 
             cardLayout.show(cardPanel, "Gameboard");
         });
         panel.add(startButton);
-        
-        //Cancel Button
+
+        // Cancel Button
         JButton backButton = new JButton("Cancel");
         backButton.setBounds(450, 550, 100, 50);
         backButton.addActionListener(new ActionListener() {
@@ -85,5 +116,13 @@ public class CustomMode {
 
     public static void setSelectedTheme(String theme) {
         selectedTheme = theme;
+    }
+
+    public static String getSelectedDifficulty() {
+        return selectedDifficulty;
+    }
+
+    public static void setSelectedDifficulty(String difficulty) {
+        selectedDifficulty = difficulty;
     }
 }

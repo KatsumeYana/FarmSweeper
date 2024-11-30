@@ -12,16 +12,9 @@ public class CustomGameLose {
         JPanel panel = new JPanel(null);
         panel.setOpaque(false);
 
-        // Custom Lose Image
-        JLabel loseImageLabel = new JLabel();
-        File loseImageFile = new File("customlose.png");
-            ImageIcon originalIcon = new ImageIcon(loseImageFile.getPath());
-            Image scaledImage = originalIcon.getImage().getScaledInstance(450, 342, Image.SCALE_SMOOTH);
-            loseImageLabel.setIcon(new ImageIcon(scaledImage));
         
-        loseImageLabel.setBounds(0, 0, 815, 620);
-        panel.add(loseImageLabel);
-        
+
+        // Home Button
         JButton homeButton = new JButton("Home");
         homeButton.setBounds(100, 385, 70, 50);
         homeButton.addActionListener(new ActionListener() {
@@ -29,23 +22,41 @@ public class CustomGameLose {
                 cardLayout.show(cardPanel, "Main Menu");
             }
         });
-        
+        panel.add(homeButton);
+
         // Retry Button
         JButton retryButton = new JButton("Retry");
-        retryButton.setBounds(450, 485, 100, 50);
+        retryButton.setBounds(250, 385, 100, 50);
         retryButton.addActionListener(new ActionListener() {
-             public void actionPerformed(ActionEvent e) {
-                // Reset the gameboard state
-                GameboardGameLogic gameboardLogic = new GameboardGameLogic();
+            public void actionPerformed(ActionEvent e) {
+                // Get the selected difficulty from CustomMode
+                String difficulty = CustomMode.getSelectedDifficulty();
+
+                // Reset the gameboard state with the selected difficulty
+                GameboardGameLogic gameboardLogic = new GameboardGameLogic(difficulty);
                 JPanel newGameboardPanel = gameboardLogic.createGameboardPanel(cardLayout, cardPanel);
 
-                // Replace the old Gameboard panel
+                // Replace or update the Gameboard panel
                 cardPanel.add(newGameboardPanel, "Gameboard");
                 cardLayout.show(cardPanel, "Gameboard");
             }
         });
         panel.add(retryButton);
-
+        
+        // Custom Lose Image
+        JLabel loseImageLabel = new JLabel();
+        File loseImageFile = new File("customlose.png");
+        if (loseImageFile.exists()) {
+            ImageIcon originalIcon = new ImageIcon(loseImageFile.getPath());
+            Image scaledImage = originalIcon.getImage().getScaledInstance(450, 342, Image.SCALE_SMOOTH);
+            loseImageLabel.setIcon(new ImageIcon(scaledImage));
+        } else {
+            loseImageLabel.setText("Image not found!");
+            loseImageLabel.setHorizontalAlignment(SwingConstants.CENTER);
+            loseImageLabel.setForeground(Color.RED);
+        }
+        loseImageLabel.setBounds(0, 0, 815, 620);
+        panel.add(loseImageLabel);
         return panel;
     }
 }

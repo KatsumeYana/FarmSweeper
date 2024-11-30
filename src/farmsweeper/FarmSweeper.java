@@ -6,7 +6,7 @@ public class FarmSweeper {
 
     
     public static void main(String[] args) {
-        MainMenu mainMenu = new MainMenu();
+         SwingUtilities.invokeLater(MainMenu::new);
         
     }
 }

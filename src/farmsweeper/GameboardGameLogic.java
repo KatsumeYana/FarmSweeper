@@ -222,12 +222,18 @@ public class GameboardGameLogic {
 
                     // Left-click logic
                     if (e.getButton() == MouseEvent.BUTTON1) {
+                        
+                         // Only increment turn counter if the tile has not been revealed (enabled)
+                        if (!clickedTile.isEnabled()) {
+                            return; // Skip turn increment for already revealed tiles
+                        }
+                        
                          if (firstClick) {
                                 firstClick = false;
                                 generateMines(clickedTile.r, clickedTile.c);
                                 startTimer();
                             }
-
+                         
                          incrementTurnCounter();
                          
                      if (mineList.contains(clickedTile)) {
@@ -285,8 +291,10 @@ public class GameboardGameLogic {
     }
 
     private void incrementTurnCounter() {
+        
         turnCounter++;
         turnLabel.setText("Turns: " + turnCounter);
+        
     }
     
     private void generateMines(int safeRow, int safeCol) {
@@ -336,9 +344,13 @@ public class GameboardGameLogic {
         if (r < 0 || r >= numRows || c < 0 || c >= numCols) return;
 
         MineTile tile = board[r][c];
-        if (!tile.isEnabled()) return; // Skip already revealed tiles
+        if (!tile.isEnabled()){
+            
+            return;
+        } // Skip already revealed tiles
 
         tile.setEnabled(false);
+        
         tilesClicked++;
 
         int adjacentMines = countAdjacentMines(r, c);
