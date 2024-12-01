@@ -5,32 +5,30 @@ import java.awt.*;
 import java.awt.event.*;
 import javax.swing.table.*;
 import java.io.File;
-import java.io.IOException;
 import java.sql.*;
 import java.util.ArrayList;
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
+import java.io.IOException;
 
 public class Leaderboard {
 
     private JLabel backgroundLabel;
-    private JLabel leaderBoard;
-    private JButton backButton;
     private final JTable leaderboardTable;
     private final DefaultTableModel model;  // DefaultTableModel declaration
     
-    private String[] difficulties = {"Easy", "Normal", "Hard"};
+    private final String[] difficulties = {"Easy", "Normal", "Hard"};
     private int currentDifficultyIndex = 1; // Default to Normal
     private static String selectedDifficulty = "normal";
     
     // Store the leaderboard data in a list
-    private ArrayList<GameRecord> leaderboardData;
+    private final ArrayList<GameRecord> leaderboardData;
 
     private Connection conn;
 
     // Constructor initializes the table model
     public Leaderboard() {
-        model = new DefaultTableModel(new Object[]{"Rank", "Name", "Time", "Turn", "Difficulty"}, 0);
+        model = new DefaultTableModel(new Object[]{"Rank", "Name", "Time", "Turn"}, 0);
         leaderboardTable = new JTable(model);
         leaderboardTable.setFillsViewportHeight(true);
         
@@ -47,14 +45,13 @@ public class Leaderboard {
         try {
             conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/farmsweeper", "root", "Juliana");
         } catch (SQLException e) {
-            e.printStackTrace();
             JOptionPane.showMessageDialog(null, "Error connecting to the database.", "Database Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 
     // Method to load leaderboard data from the database
     private void loadLeaderboardDataFromDatabase() {
-        try (Statement stmt = conn.createStatement()) {
+        try {
             // Adjust the query to use the selectedDifficulty directly in the WHERE clause
             String query = "SELECT player_name, difficulty, time_taken, turns_taken " +
                            "FROM customgamerecords WHERE difficulty = ? ORDER BY time_taken ASC";
@@ -84,10 +81,10 @@ public class Leaderboard {
             }
 
         } catch (SQLException e) {
-            e.printStackTrace();
             JOptionPane.showMessageDialog(null, "Error loading leaderboard data.", "Database Error", JOptionPane.ERROR_MESSAGE);
         }
     }
+
 
 
     // Method to add a new game record to the database
@@ -109,7 +106,6 @@ public class Leaderboard {
             // Load the updated leaderboard data from the database
             loadLeaderboardDataFromDatabase();
         } catch (SQLException e) {
-            e.printStackTrace();
             JOptionPane.showMessageDialog(null, "Error saving game record.", "Database Error", JOptionPane.ERROR_MESSAGE);
         }
     }
@@ -157,146 +153,104 @@ public class Leaderboard {
     public JPanel createLeaderboardPanel(CardLayout cardLayout, JPanel cardPanel) {
         JLayeredPane layeredPane = new JLayeredPane();
         layeredPane.setLayout(null);
-
-        // Title for Leaderboard
-        leaderBoard = new JLabel();
-        try {
-            BufferedImage titleIcon = ImageIO.read(new File("leaderboardTitle.png"));
-            ImageIcon titleImageIcon = new ImageIcon(titleIcon);
-            leaderBoard.setIcon(titleImageIcon);
-            leaderBoard.setText("");
-        } catch (IOException ex) {
-            ex.printStackTrace();
-            JOptionPane.showMessageDialog(cardPanel, "Error loading image for Leaderboard title!", "Error", JOptionPane.ERROR_MESSAGE);
-        }
-        leaderBoard.setBounds(15, 40, 700, 105);
-        layeredPane.add(leaderBoard);
+        
+        // JTable and fonts for columns
+        Font headerFont = CustomFont.loadCustomFont("PressStart2P-Regular.ttf", 12);
+        Font textFont = CustomFont.loadCustomFont("PressStart2P-Regular.ttf", 10);
+        Font filterFont = CustomFont.loadCustomFont("PressStart2P-Regular.ttf", 16);
         
         // Difficulty Selection
         JLabel difficultyLabel = new JLabel(difficulties[currentDifficultyIndex], SwingConstants.CENTER);
-        difficultyLabel.setBounds(300, 150, 100, 30);
-        JButton difficultyLeftBtn = new JButton("<");
-        difficultyLeftBtn.setBounds(260, 150, 50, 70);
-        JButton difficultyRightBtn = new JButton(">");
-        difficultyRightBtn.setBounds(400, 150, 50, 70);
-
-        difficultyLeftBtn.addActionListener(e -> {
+        difficultyLabel.setFont(filterFont);
+        difficultyLabel.setBounds(370, 175, 100, 30);
+        // Left button to change difficulty
+        String difficultyLeftIconPath = "Leaderboard Difficulty Previous Button.png";
+        JButton difficultyLeftBtn = createButton(difficultyLeftIconPath, 270, 160, 63, 64,(ActionEvent e) -> {
             currentDifficultyIndex = (currentDifficultyIndex - 1 + difficulties.length) % difficulties.length;
-            selectedDifficulty = difficulties[currentDifficultyIndex]; // Update selected difficulty
-            difficultyLabel.setText(selectedDifficulty);
+            difficultyLabel.setText(difficulties[currentDifficultyIndex]);
         });
 
-        difficultyRightBtn.addActionListener(e -> {
+        // Right button to change difficulty
+        String difficultyRightIconPath = "Leaderboard Difficulty Next Button.png";
+        JButton difficultyRightBtn = createButton(difficultyRightIconPath, 510, 160, 63, 64,(ActionEvent e) -> {
             currentDifficultyIndex = (currentDifficultyIndex + 1) % difficulties.length;
-            selectedDifficulty = difficulties[currentDifficultyIndex]; // Update selected difficulty
-            difficultyLabel.setText(selectedDifficulty);
+            difficultyLabel.setText(difficulties[currentDifficultyIndex]);
         });
 
         layeredPane.add(difficultyLabel);
         layeredPane.add(difficultyLeftBtn);
         layeredPane.add(difficultyRightBtn);
         
-        //Filter Button
-        JButton filterBtn = new JButton("Filter");
-        filterBtn.setBounds(490, 150, 100, 70);
-        filterBtn.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                // Filter the leaderboard based on the selected difficulty
-                filterLeaderboardByDifficulty(selectedDifficulty);
-            }
+        //OK Button
+        String okRightIconPath = "Leaderboard  Difficulty Ok Button.png";
+        JButton okBtn = createButton(okRightIconPath, 650, 170, 92, 41, (ActionEvent e) -> {
+            // Filter the leaderboard based on the selected difficulty
+            selectedDifficulty = difficulties[currentDifficultyIndex].toLowerCase();  // Ensure it matches the database
+            filterLeaderboardByDifficulty(selectedDifficulty);
         });
-        layeredPane.add(filterBtn);
+        layeredPane.add(okBtn);
         
-        
-        
-        // Back Button
-        backButton = new JButton("");
-        try {
-            BufferedImage buttonIcon = ImageIO.read(new File("backButton.png"));
-            ImageIcon buttonImageIcon = new ImageIcon(buttonIcon);
-            backButton.setIcon(buttonImageIcon);
-            backButton.setText("");
-        } catch (Exception ex) {
-            ex.printStackTrace();
-            JOptionPane.showMessageDialog(cardPanel, "Error loading image for Back button!", "Error", JOptionPane.ERROR_MESSAGE);
-        }
+        // Home Button
+        String backIconPath = "back.png"; 
+        JButton backButton = createButton(backIconPath, 20, 10, 70, 38, (ActionEvent e) -> {
+            cardLayout.show(cardPanel, "Main Menu");
+            System.out.println("You pressed home button");
 
-        backButton.setBounds(300, 490, 200, 105);
-        backButton.setBorderPainted(false);
-        backButton.setFocusPainted(false);
-        backButton.setContentAreaFilled(false);
-
-        backButton.addActionListener(e -> cardLayout.show(cardPanel, "Main Menu"));
+        });
         layeredPane.add(backButton);
         
-        
 
-        // JTable and fonts for columns
-        Font headerFont = loadCustomFont("PressStart2P-Regular.ttf", 12);
-        Font rankFont = loadCustomFont("PressStart2P-Regular.ttf", 10);
-        Font nameFont = loadCustomFont("PressStart2P-Regular.ttf", 10);
-        Font timeFont = loadCustomFont("PressStart2P-Regular.ttf", 10);
-        Font turnFont = loadCustomFont("PressStart2P-Regular.ttf", 10);
-        Font difficultyFont = loadCustomFont("PressStart2P-Regular.ttf", 10);
-
+        //Table
         JTableHeader tableHeader = leaderboardTable.getTableHeader();
         tableHeader.setFont(headerFont);
 
-        leaderboardTable.getColumnModel().getColumn(0).setCellRenderer(new CustomCellRenderer(rankFont));
-        leaderboardTable.getColumnModel().getColumn(1).setCellRenderer(new CustomCellRenderer(nameFont));
-        leaderboardTable.getColumnModel().getColumn(2).setCellRenderer(new CustomCellRenderer(timeFont));
-        leaderboardTable.getColumnModel().getColumn(3).setCellRenderer(new CustomCellRenderer(turnFont));
-        leaderboardTable.getColumnModel().getColumn(4).setCellRenderer(new CustomCellRenderer(difficultyFont));
-
+        leaderboardTable.getColumnModel().getColumn(0).setCellRenderer(new CustomCellRenderer(textFont));
+        leaderboardTable.getColumnModel().getColumn(1).setCellRenderer(new CustomCellRenderer(textFont));
+        leaderboardTable.getColumnModel().getColumn(2).setCellRenderer(new CustomCellRenderer(textFont));
+        leaderboardTable.getColumnModel().getColumn(3).setCellRenderer(new CustomCellRenderer(textFont));
         JScrollPane scrollPane = new JScrollPane(leaderboardTable);
-        scrollPane.setBounds(50, 250, 700, 200);
+        scrollPane.setBounds(155, 250, 700, 300);
         layeredPane.add(scrollPane);
 
         JPanel panel = new JPanel(new BorderLayout());
         panel.add(layeredPane, BorderLayout.CENTER);
 
         // Background setup
-        ImageIcon backgroundIcon = loadImage("backgroundGame.png");
+        ImageIcon backgroundIcon = loadImage("Leaderboard Background.png");
         if (backgroundIcon != null) {
             backgroundLabel = new JLabel(backgroundIcon);
             Image image = backgroundIcon.getImage();
-            Image scaledImage = image.getScaledInstance(815, 620, Image.SCALE_SMOOTH);
+            Image scaledImage = image.getScaledInstance(1000, 700, Image.SCALE_SMOOTH);
             backgroundLabel.setIcon(new ImageIcon(scaledImage));
-            backgroundLabel.setBounds(0, 0, 815, 620);
+            backgroundLabel.setBounds(0, 0, 1000, 700);
             layeredPane.add(backgroundLabel);
         } else {
             System.err.println("Error: Background image not found.");
         }
         return panel;
+        
+        
     }
 
-    // Method to load images and handle null cases
-    private ImageIcon loadImage(String fileName) {
-        File imageFile = new File(fileName);
+    // Helper method to load images with a fallback
+    private ImageIcon loadImage(String path) {
+        File imageFile = new File("resources/images/" + path);
         if (imageFile.exists()) {
-            return new ImageIcon(imageFile.getPath());
+            try {
+                BufferedImage bufferedImage = ImageIO.read(imageFile);
+                return new ImageIcon(bufferedImage);
+            } catch (IOException e) {
+                JOptionPane.showMessageDialog(null, "Error loading image: " + path, "Error", JOptionPane.ERROR_MESSAGE);
+            }
         } else {
-            System.err.println("Error: Image not found: " + fileName);
-            return null;
+            System.err.println("Image not found: " + path);
         }
-    }
-    
-    // Load custom font for table headers and cells
-    private Font loadCustomFont(String fontPath, float size) {
-        try {
-            File fontFile = new File(fontPath);
-            Font font = Font.createFont(Font.TRUETYPE_FONT, fontFile);
-            return font.deriveFont(size);
-        } catch (Exception e) {
-            System.out.println("Error loading font: " + e.getMessage());
-            return new Font("Arial", Font.PLAIN, 14);
-        }
+        return null; // Return null if image is not found or can't be loaded
     }
 
     // Custom cell renderer to apply different fonts to columns
     private static class CustomCellRenderer extends DefaultTableCellRenderer {
-        private Font font;
+        private final Font font;
 
         public CustomCellRenderer(Font font) {
             this.font = font;
@@ -312,10 +266,10 @@ public class Leaderboard {
 
     // Inner class to represent a game record
     private static class GameRecord {
-        private String name;
-        private String difficulty;
-        private String time;
-        private int turnsTaken;
+        private final String name;
+        private final String difficulty;
+        private final String time;
+        private final int turnsTaken;
 
         public GameRecord(String name, String difficulty, String time, int turnsTaken) {
             this.name = name;
@@ -343,25 +297,32 @@ public class Leaderboard {
     
     // Method to filter leaderboard data by difficulty
     private void filterLeaderboardByDifficulty(String difficulty) {
-        // Reload the leaderboard data from the database, filtering by the selected difficulty
-        selectedDifficulty = difficulty; // Update selected difficulty
-        loadLeaderboardDataFromDatabase(); // This method now takes care of filtering the data from the database
+        // Update the selected difficulty before querying the database
+        selectedDifficulty = difficulty.toLowerCase(); // Ensure case match
+
+        // Reload the leaderboard data from the database
+        loadLeaderboardDataFromDatabase();
     }
 
 
-    // Method to update the table with filtered data
-    private void updateTableFromFilteredData(ArrayList<GameRecord> filteredData) {
-        // Clear the existing rows in the table
-        model.setRowCount(0);
+    // Helper method to create a button with image icon and hover effect
+    private JButton createButton(String iconPath, int x, int y, int z, int w, ActionListener action) {
+        JButton button = new JButton();
+        final ImageIcon buttonImageIcon = loadImage(iconPath);
 
-        // Add filtered records to the table
-        for (int i = 0; i < filteredData.size(); i++) {
-            GameRecord record = filteredData.get(i);
-            model.addRow(new Object[]{i + 1, record.getName(), record.getTime(), record.getTurnsTaken(), record.getDifficulty()});
-        }
+        button.setIcon(buttonImageIcon);
+        button.setText("");
+        button.setBounds(x, y, z, w);
+        button.setBorderPainted(false);
+        button.setFocusPainted(false);
+        button.setContentAreaFilled(false);
+        button.addActionListener(action);
 
-        // Notify the table that data has changed
-        model.fireTableDataChanged();
+        // Apply the hover effect using Animations class
+        Animations.applyHoverEffect(button, buttonImageIcon);
+
+        return button;
     }
 
+    
 }

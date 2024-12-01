@@ -3,12 +3,16 @@ package farmsweeper;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Random;
+import javax.imageio.ImageIO;
 
 public class GameboardGameLogic {
     
+    //Constructor
     private class MineTile extends JButton {
         int r;
         int c;
@@ -27,7 +31,7 @@ public class GameboardGameLogic {
     private int[] boardBounds; 
     private MineTile[][] board;
     private ArrayList<MineTile> mineList;
-    private Random random = new Random();
+    private final Random random = new Random();
     private boolean gameOver = false;
     private boolean firstClick = true;
     private int tilesClicked = 0;
@@ -41,7 +45,7 @@ public class GameboardGameLogic {
     private Timer gameTimer;
     private int timeElapsed = 0;
     private int turnCounter = 0;
-    private String selectedDifficulty;
+    private final String selectedDifficulty;
     
 
     public GameboardGameLogic(String difficulty) {
@@ -55,19 +59,19 @@ public class GameboardGameLogic {
                 numRows = 8;
                 numCols = 8;
                 mineCount = 10;
-                boardBounds = new int[]{235, 150, 350, 350}; 
+                boardBounds = new int[]{345, 200, 350, 350}; 
                 break;
             case "Normal":
                 numRows = 16;
                 numCols = 16;
                 mineCount = 40;
-                boardBounds = new int[]{180, 150, 450, 450}; 
+                boardBounds = new int[]{300, 200, 450, 450}; 
                 break;
             case "Hard":
                 numRows = 16;
                 numCols = 30;
                 mineCount = 99;
-                boardBounds = new int[]{65, 150, 850, 450};
+                boardBounds = new int[]{80, 200, 850, 450};
                 break;
             default:
                 throw new IllegalArgumentException("Invalid difficulty: " + difficulty);
@@ -81,7 +85,7 @@ public class GameboardGameLogic {
 
         JPanel gameboardPanel = new JPanel(new BorderLayout());
 
-        Font textFont = loadCustomFont("PressStart2P-Regular.ttf", 16);
+        Font textFont = CustomFont.loadCustomFont("PressStart2P-Regular.ttf", 16);
         
         // JLayeredPane for background and game logic
         JLayeredPane layeredPane = new JLayeredPane();
@@ -90,81 +94,96 @@ public class GameboardGameLogic {
         // Background Layer
         String theme = CustomMode.getSelectedTheme();
         JLabel backgroundLabel = new JLabel();
-        backgroundLabel.setBounds(0, 0, 815, 620);
+        backgroundLabel.setBounds(0, 0, 1000, 700);
         String imagePath = getImagePathForTheme(theme);
         File imageFile = new File(imagePath);
         if (imageFile.exists()) {
             ImageIcon originalIcon = new ImageIcon(imagePath);
-            Image scaledImage = originalIcon.getImage().getScaledInstance(815, 620, Image.SCALE_SMOOTH);
+            Image scaledImage = originalIcon.getImage().getScaledInstance(1000, 700, Image.SCALE_SMOOTH);
             backgroundLabel.setIcon(new ImageIcon(scaledImage));
         } else {
             System.err.println("Background image not found for theme: " + theme);
             backgroundLabel.setText("No theme image found for: " + theme);
-            backgroundLabel.setForeground(Color.RED);
             backgroundLabel.setHorizontalAlignment(SwingConstants.CENTER);
         }
         layeredPane.add(backgroundLabel, Integer.valueOf(0));
+        
+        // TimeTurnBoard Layer (Added on top of the background)
+        String timeIconPath = "timeturnboard.png";
+        ImageIcon timeIcon = loadImage(timeIconPath);
+        if (timeIcon != null) {
+            JLabel timeTurnBoardLabel = new JLabel(timeIcon);
+            timeTurnBoardLabel.setBounds(225, -100, 600, 400); // Adjust bounds as per your design
+            layeredPane.add(timeTurnBoardLabel, Integer.valueOf(1)); // TimeTurnBoard at layer 1
+        }
+        
 
-        //Timer
-        timerLabel = new JLabel("Time: 0s");
-        layeredPane.add(timerLabel, Integer.valueOf(1));
-        timerLabel.setBounds(10, 10, 150, 30);
+        // Timer
+        timerLabel = new JLabel("Time: 0");
+        layeredPane.add(timerLabel, Integer.valueOf(2)); // Timer at layer 2
+        timerLabel.setBounds(360, 85, 200, 30);
         timerLabel.setFont(textFont);
 
-        //Turn
+        // Turn
         turnLabel = new JLabel("Turns: 0");
-        layeredPane.add(turnLabel, Integer.valueOf(1));
-        turnLabel.setBounds(10, 50, 150, 30);
+        layeredPane.add(turnLabel, Integer.valueOf(2)); // Turn label at layer 2
+        turnLabel.setBounds(550, 85, 150, 30);
         turnLabel.setFont(textFont);
         
         // Retry Button
-        JButton retryButton = new JButton("Retry");
-        retryButton.setBounds(240, 385, 100, 50);
-        retryButton.addActionListener(e -> {
+        String retryButtonIconPath = "Retry Button.png"; 
+        JButton retryButton = createButton(retryButtonIconPath, 800, 10, (ActionEvent e) -> {
             GameboardGameLogic gameboardLogic = new GameboardGameLogic(selectedDifficulty);
             JPanel newGameboardPanel = gameboardLogic.createGameboardPanel(cardLayout, cardPanel);
-
             cardPanel.add(newGameboardPanel, "Gameboard");
             cardLayout.show(cardPanel, "Gameboard");
+            System.out.println("You pressed retry button");
         });
-        layeredPane.add(retryButton, Integer.valueOf(1));
-        
-        // Home button
-        JButton homeButton = new JButton("Home");
-        homeButton.setBounds(690, 30, 70, 50);
-        homeButton.addActionListener(e -> cardLayout.show(cardPanel, "Main Menu"));
-        layeredPane.add(homeButton, Integer.valueOf(1));
-        
+        layeredPane.add(retryButton, Integer.valueOf(7)); 
+
+        // Home Button
+        String homeButtonIconPath = "Home Button.png"; 
+        JButton homeButton = createButton(homeButtonIconPath, 900, 10, (ActionEvent e) -> {
+            cardLayout.show(cardPanel, "Main Menu");
+            System.out.println("You pressed home button");
+
+        });
+        layeredPane.add(homeButton, Integer.valueOf(7)); 
+
+
         // Gameboard Layer
         JPanel boardPanel = createGameBoard(() -> {
             homeButton.setEnabled(false);
-            System.out.println("Win condition triggered for theme: " + theme);
+            retryButton.setEnabled(false);
+            System.out.println("You Win! Theme of " + theme);
             stopTimer();
             Leaderboard leaderboard = new Leaderboard();
             JPanel winPanel = new CustomGameWin(new Leaderboard()).createWinPanel(cardLayout, cardPanel, timeElapsed, turnCounter, selectedDifficulty);
-            winPanel.setBounds(185, 0, 815, 620);
-            layeredPane.add(winPanel, Integer.valueOf(3));
+            winPanel.setBounds(60, 70, 815, 620);
+            layeredPane.add(winPanel, Integer.valueOf(8)); 
             layeredPane.revalidate();
             layeredPane.repaint();
         }, () -> {
             homeButton.setEnabled(false);
-            System.out.println("Lose condition triggered!");
+            retryButton.setEnabled(false);
+            System.out.println("You Lose!");
             stopTimer();
             JPanel losePanel = new CustomGameLose().createLosePanel(cardLayout, cardPanel);
-            losePanel.setBounds(185, 0, 815, 620);
-            layeredPane.add(losePanel, Integer.valueOf(3));
+            losePanel.setBounds(318, 40, 815, 620);
+            layeredPane.add(losePanel, Integer.valueOf(8)); 
             layeredPane.revalidate();
-            layeredPane.repaint();
-        });
+            layeredPane.repaint(); 
+       });
 
+        
         // Set the bounds dynamically based on difficulty
         boardPanel.setBounds(boardBounds[0], boardBounds[1], boardBounds[2], boardBounds[3]);
         boardPanel.setOpaque(false);
-        layeredPane.add(boardPanel, Integer.valueOf(2));
-
+        // Apply the fade-in effect after the game board is created
+        layeredPane.add(boardPanel, Integer.valueOf(7));  // Add boardPanel to layeredPane
         gameboardPanel.add(layeredPane, BorderLayout.CENTER);
-        return gameboardPanel;
         
+        return gameboardPanel;
     }
 
     private JPanel createGameBoard(Runnable onWin, Runnable onLose) {
@@ -180,7 +199,7 @@ public class GameboardGameLogic {
                 MineTile tile = new MineTile(r, c);
                 board[r][c] = tile;
                 
-                tileFont = loadCustomFont("PressStart2P-Regular.ttf", 12);
+                tileFont = CustomFont.loadCustomFont("PressStart2P-Regular.ttf", 12);
                 flagFont = new Font("Segoe UI Emoji", Font.PLAIN, 12);
                 
                 tile.setMargin(new Insets(0, 0, 0, 0)); 
@@ -237,7 +256,7 @@ public class GameboardGameLogic {
                          incrementTurnCounter();
                          
                      if (mineList.contains(clickedTile)) {
-                                revealMines();
+                                revealMines(clickedTile);
                                 stopTimer();
                                 onLose.run();
                             } else {
@@ -262,24 +281,11 @@ public class GameboardGameLogic {
         return boardPanel;
     }
 
-    private Font loadCustomFont(String fontPath, float size) {
-        try {
-            File fontFile = new File(fontPath);
-            Font font = Font.createFont(Font.TRUETYPE_FONT, fontFile);
-            return font.deriveFont(size);
-        } catch (Exception e) {
-            System.out.println("Error loading font: " + e.getMessage());
-            return new Font("Arial", Font.PLAIN, 14);
-        }
-    }
     
      private void startTimer() {
-        gameTimer = new Timer(1000, new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                timeElapsed++;
-                timerLabel.setText("Time: " + timeElapsed + "s");
-            }
+        gameTimer = new Timer(1000, (ActionEvent e) -> {
+            timeElapsed++;
+            timerLabel.setText("Time: " + timeElapsed);
         });
         gameTimer.start();
     }
@@ -316,14 +322,11 @@ public class GameboardGameLogic {
         }
     }
 }
-
-
-    private void revealMines() {
-        for (MineTile tile : mineList) {
-            tile.setFont(flagFont);             
-            tile.setText("💣");
-            tile.setBackground(Color.RED);
-        }
+    private void revealMines(MineTile clickedTile) {
+        // Only reveal the clicked mine and stop the game
+        clickedTile.setFont(flagFont);             
+        clickedTile.setText("💣");
+        clickedTile.setBackground(Color.RED);
         gameOver = true;
     }
 
@@ -394,13 +397,48 @@ public class GameboardGameLogic {
     private String getImagePathForTheme(String theme) {
         switch (theme) {
             case "Spring":
-                return "spring.png";
+                return "resources/images/Spring.png";
             case "Summer":
-                return "summer.png";
+                return "resources/images/Summer.png";
             case "Autumn":
-                return "autumn.png";
+                return "resources/images/Autumn.png";
             default:
-                return "default.png";
+                return "No chosen image";
         }
+    }
+    
+    // Helper method to load images with a fallback
+    private ImageIcon loadImage(String path) {
+        File imageFile = new File("resources/images/" + path);
+        if (imageFile.exists()) {
+            try {
+                BufferedImage bufferedImage = ImageIO.read(imageFile);
+                return new ImageIcon(bufferedImage);
+            } catch (IOException e) {
+                JOptionPane.showMessageDialog(null, "Error loading image: " + path, "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        } else {
+            System.err.println("Image not found: " + path);
+        }
+        return null; // Return null if image is not found or can't be loaded
+    }
+
+    // Helper method to create a button with an image icon
+    private JButton createButton(String iconPath, int x, int y, ActionListener action) {
+        JButton button = new JButton();
+        final ImageIcon buttonImageIcon = loadImage(iconPath);
+        
+        button.setIcon(buttonImageIcon);
+        button.setText("");
+        button.setBounds(x, y, 100, 70);
+        button.setBorderPainted(false);
+        button.setFocusPainted(false);
+        button.setContentAreaFilled(false);
+        button.addActionListener(action);
+
+        // Apply the hover effect using Animations class
+        Animations.applyHoverEffect(button, buttonImageIcon);
+
+        return button;
     }
 }
