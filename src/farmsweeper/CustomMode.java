@@ -86,7 +86,7 @@ public class CustomMode {
         // Cancel Button
         String backIconPath = "Level Selection Cancel Button.png";
         JButton backButton = BaseGame.createButton(backIconPath, 500, 600, 128, 48, (ActionEvent e) -> {
-            System.exit(0); // Exit the application (for simplicity)
+            cardLayout.show(cardPanel, "Main Menu");
         });
 
         // Custom Mode Background 
@@ -127,22 +127,6 @@ public class CustomMode {
 
     public static void setSelectedDifficulty(String difficulty) {
         selectedDifficulty = difficulty;
-    }
-
-    // Helper method to load images with a fallback
-    private ImageIcon loadImage(String path) {
-        File imageFile = new File("resources/images/" + path);
-        if (imageFile.exists()) {
-            try {
-                BufferedImage bufferedImage = ImageIO.read(imageFile);
-                return new ImageIcon(bufferedImage);
-            } catch (IOException e) {
-                JOptionPane.showMessageDialog(null, "Error loading image: " + path, "Error", JOptionPane.ERROR_MESSAGE);
-            }
-        } else {
-            System.err.println("Image not found: " + path);
-        }
-        return null; // Return null if image is not found or can't be loaded
     }
 
 }

@@ -90,7 +90,7 @@ public class MineTile extends JButton {
             case "Spring" -> "resources/images/potao.png";
             case "Summer" -> "resources/images/melon.png";
             case "Autumn" -> "resources/images/pumpkin.png";
-            default -> "resources/images/beet.png";
+            default -> "none";
         };
         // Set the flagged image
         ImageIcon flaggedIcon = new ImageIcon(cropImagePath);
@@ -117,15 +117,11 @@ public class MineTile extends JButton {
 
     // Helper method to get the flagged image path based on the theme
     private String getFlaggedImagePath(String theme) {
-        switch (theme) {
-            case "Spring":
-                return "resources/images/springTileFlagged.gif";
-            case "Summer":
-                return "resources/images/summerTileFlagged.gif";
-            case "Autumn":
-                return "resources/images/autumnTileFlagged.gif";
-            default:
-                return "resources/images/defaultTileFlagged.gif";
-        }
+        return switch (theme) {
+            case "Spring" -> "resources/images/springTileFlagged.gif";
+            case "Summer" -> "resources/images/summerTileFlagged.gif";
+            case "Autumn" -> "resources/images/autumnTileFlagged.gif";
+            default -> "resources/images/springTileFlagged.gif";
+        };
     }
 }

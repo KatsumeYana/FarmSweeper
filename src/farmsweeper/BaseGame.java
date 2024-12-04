@@ -35,38 +35,6 @@ public class BaseGame {
             }
         });
     }
-
-    // Fade-in animation for any JComponent (e.g., JPanel, JLabel)
-    public static void fadeIn(JComponent component, int durationMillis) {
-        component.setOpaque(false);  // Ensure the component starts as transparent
-
-        final float[] opacity = {0f}; // Initial opacity is 0 (completely transparent)
-
-        // Timer to gradually increase opacity
-        Timer fadeTimer = new Timer(30, e -> {
-            if (opacity[0] < 1f) {
-                opacity[0] += 0.05f;  // Gradually increase opacity (adjust speed by changing 0.05f)
-                component.repaint();   // Repaint the component to update opacity
-            } else {
-                ((Timer) e.getSource()).stop();  // Stop the timer once fully opaque
-            }
-        });
-
-        fadeTimer.start();  // Start the fade-in animation
-
-        // Custom painting logic to apply the opacity during rendering
-        component.addComponentListener(new java.awt.event.ComponentAdapter() {
-            
-            public void paintComponent(Graphics g) {
-                
-
-                Graphics2D g2d = (Graphics2D) g;
-                AlphaComposite alphaComposite = AlphaComposite.getInstance(AlphaComposite.SRC_OVER, opacity[0]);
-                g2d.setComposite(alphaComposite);
-
-            }
-        });
-    }
     
     // Load custom font from file
     public static Font loadCustomFont(String fontPath, float size) {

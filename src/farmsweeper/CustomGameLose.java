@@ -2,47 +2,57 @@ package farmsweeper;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.io.File;
 
 public class CustomGameLose {
 
+    private float alpha = 0f; // Start with fully transparent
+
     public JPanel createLosePanel(CardLayout cardLayout, JPanel cardPanel) {
-    JPanel panel = new JPanel(null) {
-        @Override
-        protected void paintComponent(Graphics g) {
-            super.paintComponent(g);
-            // Make sure the background is transparent
-            setOpaque(false); // This makes the background transparent
-        }
-    };
+        JPanel panel = new JPanel(null) {
+            @Override
+            protected void paintComponent(Graphics g) {
+                super.paintComponent(g);
 
-    panel.setLayout(null); // Use null layout for custom positioning
+                // Ensure the panel has a transparent background
+                setOpaque(false);
 
-    // Home Button with image and hover effect
-    JButton homeButton = BaseGame.createButton("Home Button.png", 100, 385, 70, 62, e -> {
-        cardLayout.show(cardPanel, "Main Menu");
-    });
-    panel.add(homeButton);
+                Graphics2D g2d = (Graphics2D) g;
+                g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
-    // Retry Button with image and hover effect
-    JButton retryButton = BaseGame.createButton("Retry Button.png", 250, 385, 69, 63, e -> {
-        // Get the selected difficulty from CustomMode
-        String difficulty = CustomMode.getSelectedDifficulty();
+                // Set alpha for fading effect, ensure it's within the range [0.0f, 1.0f]
+                AlphaComposite alphaComposite = AlphaComposite.getInstance(AlphaComposite.SRC_OVER, Math.min(1.0f, Math.max(0.0f, alpha)));
+                g2d.setComposite(alphaComposite);
 
-        // Reset the gameboard state with the selected difficulty
-        GameboardGameLogic gameboardLogic = new GameboardGameLogic(difficulty);
-        JPanel newGameboardPanel = gameboardLogic.createGameboardPanel(cardLayout, cardPanel);
+                super.paintComponent(g);  // Draw the content
+            }
+        };
 
-        // Replace or update the Gameboard panel
-        cardPanel.add(newGameboardPanel, "Gameboard");
-        cardLayout.show(cardPanel, "Gameboard");
-    });
-    panel.add(retryButton);
+        panel.setLayout(null);  // Use null layout for custom positioning
+        startFadeIn(panel);     // Start fade-in effect
 
-    // Custom Lose Image
-    JLabel loseImageLabel = new JLabel();
-    File loseImageFile = new File("resources/images/lose.png");
+        // Home Button with image and hover effect
+        JButton homeButton = BaseGame.createButton("Home Button.png", 100, 385, 70, 62, e -> {
+            cardLayout.show(cardPanel, "Main Menu");
+        });
+        panel.add(homeButton);
+
+        // Retry Button with image and hover effect
+        JButton retryButton = BaseGame.createButton("Retry Button.png", 250, 385, 69, 63, e -> {
+            // Get the selected difficulty from CustomMode
+            String difficulty = CustomMode.getSelectedDifficulty();
+            GameboardGameLogic gameboardLogic = new GameboardGameLogic(difficulty);
+            JPanel newGameboardPanel = gameboardLogic.createGameboardPanel(cardLayout, cardPanel);
+            cardPanel.add(newGameboardPanel, "Gameboard");
+            cardLayout.show(cardPanel, "Gameboard");
+        });
+        panel.add(retryButton);
+
+        // Custom Lose Image
+        JLabel loseImageLabel = new JLabel();
+        File loseImageFile = new File("resources/images/lose.png");
         if (loseImageFile.exists()) {
             ImageIcon originalIcon = new ImageIcon(loseImageFile.getPath());
             Image scaledImage = originalIcon.getImage().getScaledInstance(450, 342, Image.SCALE_SMOOTH);
@@ -58,4 +68,19 @@ public class CustomGameLose {
         return panel;
     }
 
+    // Fade-in effect
+    private void startFadeIn(JPanel panel) {
+        Timer fadeInTimer = new Timer(30, new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (alpha < 1f) {
+                    alpha += 0.05f;  // Increase opacity
+                    panel.repaint();  // Repaint the panel with updated opacity
+                } else {
+                    ((Timer) e.getSource()).stop();  // Stop the fade-in effect when fully opaque
+                }
+            }
+        });
+        fadeInTimer.start();
+    }
 }

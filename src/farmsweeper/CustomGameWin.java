@@ -3,10 +3,7 @@ package farmsweeper;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
-import java.awt.image.BufferedImage;
 import java.io.File;
-import java.io.IOException;
-import javax.imageio.ImageIO;
 
 public class CustomGameWin {
 
@@ -15,80 +12,103 @@ public class CustomGameWin {
     private String difficulty;
     private int timeTaken;
     private int turnsTaken;
+    private float alpha = 0f; // Start with fully transparent
+
+    public CustomGameWin() {}
 
     public CustomGameWin(Leaderboard leaderboard) {
         this.leaderboard = leaderboard;
     }
 
-    public JPanel createWinPanel(CardLayout cardLayout, JPanel cardPanel, int timeTaken, int turnsTaken, String difficulty) {
-        setTimeTaken(timeTaken);
-        setTurnsTaken(turnsTaken);
-        setDifficulty(difficulty);
+    public JPanel createWinPanel(CardLayout cardLayout, JPanel cardPanel, int timeElapsed, int turnCounter, String selectedDifficulty) {
+        JPanel panel = new JPanel(null) {
+            @Override
+            protected void paintComponent(Graphics g) {
+                super.paintComponent(g);
+                Graphics2D g2d = (Graphics2D) g;
+                g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
-        JPanel panel = new JPanel(null);
-        panel.setOpaque(false);
+                // Set alpha for fading effect (ensure it's between 0.0f and 1.0f)
+                AlphaComposite alphaComposite = AlphaComposite.getInstance(AlphaComposite.SRC_OVER, Math.min(1.0f, Math.max(0.0f, alpha)));
+                g2d.setComposite(alphaComposite);
 
-        // Font
-        Font textfont = BaseGame.loadCustomFont("PressStart2P-Regular.ttf", 12);
+                super.paintComponent(g);  // Draw content (buttons, images, etc.)
+            }
+        };
 
+        panel.setLayout(null);  // Use null layout for custom positioning
+        panel.setOpaque(false); // Set the panel to be transparent
+        startFadeIn(panel);     // Start fade-in effect
+
+        Font textFont = BaseGame.loadCustomFont("PressStart2P-Regular.ttf", 12);
+        
         // Input Name Field with Placeholder
         JTextField inputName = new JTextField("Enter name");
-        inputName.setBounds(370, 340, 180, 30);
-        inputName.setFont(textfont);
+        inputName.setBounds(390, 340, 150, 30);  
+        inputName.setFont(textFont);
         inputName.setForeground(Color.GRAY);
         inputName.setBorder(null);  // Remove custom border
         inputName.setBackground(new Color(255, 202, 99));  // Yellow Gold color
 
+        // Focus listener to handle placeholder text
         inputName.addFocusListener(new FocusAdapter() {
             @Override
             public void focusGained(FocusEvent e) {
                 if (inputName.getText().equals("Enter name")) {
-                    inputName.setText("");  // Clear placeholder text
-                    inputName.setForeground(Color.BLACK);  // Set text color to black when typing
+                    inputName.setText(""); // Clear placeholder text
+                    inputName.setForeground(Color.BLACK); // Set text color to black
                 }
             }
 
             @Override
             public void focusLost(FocusEvent e) {
                 if (inputName.getText().isEmpty()) {
-                    inputName.setText("Enter name");
-                    inputName.setForeground(Color.GRAY);  // Restore placeholder color
+                    inputName.setText("Enter name"); // Restore placeholder text
+                    inputName.setForeground(Color.GRAY); // Set text color to gray
                 }
             }
         });
-        panel.add(inputName, Integer.valueOf(2));
+        panel.add(inputName);
 
         // Home Button
-        JButton homeButton = createButton("Home Button.png", 200, 420, 70, 62, e -> {
+        String homeButtonIconPath = "Home Button.png"; 
+        JButton homeButton = BaseGame.createButton(homeButtonIconPath, 185, 420, 70, 62, e -> {
             cardLayout.show(cardPanel, "Main Menu");
-            System.out.println("Home button pressed");
+            System.out.println("You pressed home button");
         });
-        panel.add(homeButton, Integer.valueOf(1));
+        panel.add(homeButton);
 
         // Retry Button
-        JButton retryButton = createButton("Retry Button.png", 300, 420, 69, 63, e -> {
-            GameboardGameLogic gameboardLogic = new GameboardGameLogic(difficulty);
+        String retryButtonIconPath = "Retry Button.png"; 
+        JButton retryButton = BaseGame.createButton(retryButtonIconPath, 285, 420, 69, 63, e -> {
+            // Reset the gameboard state with the selected difficulty
+            GameboardGameLogic gameboardLogic = new GameboardGameLogic(selectedDifficulty);
             JPanel newGameboardPanel = gameboardLogic.createGameboardPanel(cardLayout, cardPanel);
             cardPanel.add(newGameboardPanel, "Gameboard");
             cardLayout.show(cardPanel, "Gameboard");
-            System.out.println("Retry button pressed");
+            System.out.println("You pressed retry button");
         });
-        panel.add(retryButton);
+        panel.add(retryButton, Integer.valueOf(8));
 
         // Change Game Button
-        JButton changeGameButton = createButton("changegame.png", 400, 420, 137, 58, e -> {
-            cardLayout.show(cardPanel, "Custom Mode");
+        String changeGameIconPath = "changegame.png";
+        JButton changeGameButton = BaseGame.createButton(changeGameIconPath, 385, 420, 137, 58, e -> {
+            cardLayout.show(cardPanel, "Custom Mode");  // Go to custom mode to change game settings
         });
-        panel.add(changeGameButton, Integer.valueOf(1));
+        panel.add(changeGameButton, Integer.valueOf(8));
 
         // Save Button to save the record
-        JButton addButton = createButton("addleaderboard.png", 550, 420, 186, 59, e -> {
-            String namePlayer = inputName.getText().trim();
-            if (!namePlayer.isEmpty() && !namePlayer.equals("Enter name")) {
-                setPlayerName(namePlayer);
-                leaderboard.addGameRecord(namePlayer, difficulty, formatTime(timeTaken), turnsTaken);
+        String addButtonIconPath = "addleaderboard.png"; 
+        JButton addButton = BaseGame.createButton(addButtonIconPath, 535, 420, 186, 59,(ActionEvent e) -> {
+            String namePlayer = inputName.getText().trim(); // Use the local inputName field
 
-                // Show leaderboard panel
+            if (!namePlayer.isEmpty() && !namePlayer.equals("Enter name")) {
+                setPlayerName(namePlayer); // Save player name to instance variable
+
+                // Add to leaderboard and save record before showing leaderboard
+                leaderboard.addGameRecord(namePlayer, selectedDifficulty, formatTime(timeElapsed), turnCounter);
+
+                // Show the leaderboard screen
                 JPanel leaderboardPanel = leaderboard.createLeaderboardPanel(cardLayout, cardPanel);
                 cardPanel.add(leaderboardPanel, "Leaderboard");
                 cardLayout.show(cardPanel, "Leaderboard");
@@ -98,11 +118,11 @@ public class CustomGameWin {
                 JOptionPane.showMessageDialog(panel, "Please enter a valid name!", "Error", JOptionPane.ERROR_MESSAGE);
             }
         });
-        panel.add(addButton, Integer.valueOf(1));
+        panel.add(addButton, Integer.valueOf(8));
 
         // Custom Win Image
         JLabel winImageLabel = new JLabel();
-        File winImageFile = new File("resources/images/Custom Mode Win Screen.png");
+        File winImageFile = new File("resources/images/Custom Mode Win Screen.png");  // Ensure correct path
         if (winImageFile.exists()) {
             ImageIcon originalIcon = new ImageIcon(winImageFile.getPath());
             Image scaledImage = originalIcon.getImage().getScaledInstance(900, 700, Image.SCALE_SMOOTH);
@@ -112,47 +132,28 @@ public class CustomGameWin {
             winImageLabel.setHorizontalAlignment(SwingConstants.CENTER);
         }
         winImageLabel.setBounds(0, 0, 815, 620);
-        panel.add(winImageLabel, Integer.valueOf(0));
-
-        // Apply fade-in animation
-        BaseGame.fadeIn(panel, 10000);  // Fade in the win panel over 2 seconds
+        panel.add(winImageLabel, Integer.valueOf(5));
 
         return panel;
     }
 
-    private JButton createButton(String iconPath, int x, int y, int z, int w, ActionListener action) {
-        JButton button = new JButton();
-        final ImageIcon buttonImageIcon = loadImage(iconPath);
-
-        button.setIcon(buttonImageIcon);
-        button.setText("");
-        button.setBounds(x, y, z, w);
-        button.setBorderPainted(false);
-        button.setFocusPainted(false);
-        button.setContentAreaFilled(false);
-        button.addActionListener(action);
-
-        // Apply the hover effect using Animations class
-        BaseGame.applyHoverEffect(button, buttonImageIcon);
-        
-        return button;
-    }
-
-    private ImageIcon loadImage(String path) {
-        File imageFile = new File("resources/images/" + path);
-        if (imageFile.exists()) {
-            try {
-                BufferedImage bufferedImage = ImageIO.read(imageFile);
-                return new ImageIcon(bufferedImage);
-            } catch (IOException e) {
-                JOptionPane.showMessageDialog(null, "Error loading image: " + path, "Error", JOptionPane.ERROR_MESSAGE);
+    // Fade-in effect (updates alpha to make panel fade in)
+    private void startFadeIn(JPanel panel) {
+        Timer fadeInTimer = new Timer(30, new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (alpha < 1f) {
+                    alpha += 0.05f;  // Increase opacity
+                    panel.repaint();  // Repaint the panel with updated opacity
+                } else {
+                    ((Timer) e.getSource()).stop();  // Stop the fade-in effect when fully opaque
+                }
             }
-        } else {
-            System.err.println("Image not found: " + path);
-        }
-        return null;
+        });
+        fadeInTimer.start();
     }
 
+    // Utility method to format time as MM:SS
     private String formatTime(int timeTaken) {
         int minutes = timeTaken / 60;
         int seconds = timeTaken % 60;

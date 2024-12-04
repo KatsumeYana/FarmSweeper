@@ -38,14 +38,14 @@ public class GameboardGameLogic {
             case "Easy":
                 numRows = 8;
                 numCols = 8;
-                mineCount = 1;
-                boardBounds = new int[]{200, 160, 350, 350};
+                mineCount = 10;
+                boardBounds = new int[]{350, 160, 350, 350};
                 break;
             case "Normal":
                 numRows = 16;
                 numCols = 16;
                 mineCount = 40;
-                boardBounds = new int[]{210, 160, 500, 500};
+                boardBounds = new int[]{260, 160, 500, 500};
                 break;
             case "Hard":
                 numRows = 16;
@@ -87,16 +87,26 @@ public class GameboardGameLogic {
             }
             layeredPane.add(backgroundLabel, Integer.valueOf(0));
 
+            // TimeTurnBoard Layer (to display time and turns)
+            String timeIconPath = "timeturnboard.png";
+            ImageIcon timeIcon = BaseGame.loadImage(timeIconPath);
+            if (timeIcon != null) {
+                JLabel timeTurnBoardLabel = new JLabel(timeIcon);
+                timeTurnBoardLabel.setBounds(225, -100, 600, 400); // Adjust bounds as per your design
+                layeredPane.add(timeTurnBoardLabel, Integer.valueOf(1));  // TimeTurnBoard at layer 1
+            }
+            
             // Timer and Turn Counter labels
             timerLabel = new JLabel("Time: 0");
             layeredPane.add(timerLabel, Integer.valueOf(2)); // Timer at layer 2
-            timerLabel.setBounds(340, 85, 200, 30);
+            timerLabel.setBounds(350, 85, 200, 30);
             timerLabel.setFont(textFont);
 
             turnLabel = new JLabel("Turns: 0");
             layeredPane.add(turnLabel, Integer.valueOf(2)); // Turn label at layer 2
-            turnLabel.setBounds(530, 85, 150, 30);
+            turnLabel.setBounds(540, 85, 150, 30);
             turnLabel.setFont(textFont);
+            
 
             // Retry Button
             JButton retryButton = BaseGame.createButton("Retry Button.png", 800, 10, 70, 63, (ActionEvent e) -> {
@@ -122,7 +132,7 @@ public class GameboardGameLogic {
 
                 Leaderboard leaderboard = new Leaderboard();
                 JPanel winPanel = new CustomGameWin(leaderboard).createWinPanel(cardLayout, cardPanel, timeElapsed, turnCounter, selectedDifficulty);
-                winPanel.setBounds(60, 70, 815, 620);
+                winPanel.setBounds(60, 50, 815, 620);
                 layeredPane.add(winPanel, Integer.valueOf(8));
                 layeredPane.revalidate();
                 layeredPane.repaint();
@@ -132,9 +142,9 @@ public class GameboardGameLogic {
                 retryButton.setEnabled(false);
                 stopTimer();
                 System.out.println("You Lose");
-
+                
                 JPanel losePanel = new CustomGameLose().createLosePanel(cardLayout, cardPanel);
-                losePanel.setBounds(318, 40, 815, 620);
+                losePanel.setBounds(300, 40, 815, 620);
                 layeredPane.add(losePanel, Integer.valueOf(8));
                 layeredPane.revalidate();
                 layeredPane.repaint();
@@ -167,6 +177,7 @@ private JPanel createGameBoard(Runnable onWin, Runnable onLose) {
             tile.setContentAreaFilled(true);
             tile.setFocusPainted(false);
             tile.setFocusable(false);
+            tile.setBackground(new Color(198, 149, 112));
 
             tile.addMouseListener(new MouseAdapter() {
                 @Override

@@ -4,13 +4,8 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import javax.swing.table.*;
-import java.io.File;
 import java.sql.*;
 import java.util.ArrayList;
-import javax.imageio.ImageIO;
-import java.awt.image.BufferedImage;
-import java.io.IOException;
-
 public class Leaderboard {
 
     private JLabel backgroundLabel;
@@ -20,7 +15,6 @@ public class Leaderboard {
     private final String[] difficulties = {"Easy", "Normal", "Hard"};
     private int currentDifficultyIndex = 1; // Default to Normal
     private static String selectedDifficulty = "normal";
-    
     // Store the leaderboard data in a list
     private final ArrayList<GameRecord> leaderboardData;
 
@@ -31,6 +25,8 @@ public class Leaderboard {
         model = new DefaultTableModel(new Object[]{"Rank", "Name", "Time", "Turn"}, 0);
         leaderboardTable = new JTable(model);
         leaderboardTable.setFillsViewportHeight(true);
+        leaderboardTable.setEnabled(false);
+        
         
         // Initialize the leaderboard data
         leaderboardData = new ArrayList<>();
@@ -162,7 +158,7 @@ public class Leaderboard {
         // Difficulty Selection
         JLabel difficultyLabel = new JLabel(difficulties[currentDifficultyIndex], SwingConstants.CENTER);
         difficultyLabel.setFont(filterFont);
-        difficultyLabel.setBounds(370, 175, 100, 30);
+        difficultyLabel.setBounds(370, 178, 100, 30);
         // Left button to change difficulty
         String difficultyLeftIconPath = "Leaderboard Difficulty Previous Button.png";
         JButton difficultyLeftBtn = BaseGame.createButton(difficultyLeftIconPath, 270, 160, 63, 64,(ActionEvent e) -> {
@@ -202,6 +198,7 @@ public class Leaderboard {
 
         //Table
         JTableHeader tableHeader = leaderboardTable.getTableHeader();
+        tableHeader.setEnabled(false);
         tableHeader.setFont(headerFont);
 
         leaderboardTable.getColumnModel().getColumn(0).setCellRenderer(new CustomCellRenderer(textFont));
@@ -216,7 +213,7 @@ public class Leaderboard {
         panel.add(layeredPane, BorderLayout.CENTER);
 
         // Background setup
-        ImageIcon backgroundIcon = loadImage("Leaderboard Background.png");
+        ImageIcon backgroundIcon = BaseGame.loadImage("Leaderboard Background.png");
         if (backgroundIcon != null) {
             backgroundLabel = new JLabel(backgroundIcon);
             Image image = backgroundIcon.getImage();
@@ -230,22 +227,6 @@ public class Leaderboard {
         return panel;
         
         
-    }
-
-    // Helper method to load images with a fallback
-    private ImageIcon loadImage(String path) {
-        File imageFile = new File("resources/images/" + path);
-        if (imageFile.exists()) {
-            try {
-                BufferedImage bufferedImage = ImageIO.read(imageFile);
-                return new ImageIcon(bufferedImage);
-            } catch (IOException e) {
-                JOptionPane.showMessageDialog(null, "Error loading image: " + path, "Error", JOptionPane.ERROR_MESSAGE);
-            }
-        } else {
-            System.err.println("Image not found: " + path);
-        }
-        return null; // Return null if image is not found or can't be loaded
     }
 
     // Custom cell renderer to apply different fonts to columns
