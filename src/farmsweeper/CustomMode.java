@@ -23,7 +23,7 @@ public class CustomMode {
         JPanel layeredPanel = new JPanel(null);
 
         // Load custom font for text using CustomFont class
-        Font textFont = CustomFont.loadCustomFont("PressStart2P-Regular.ttf", 18);
+        Font textFont = BaseGame.loadCustomFont("PressStart2P-Regular.ttf", 18);
 
         // Theme Label
         themeLabel = new JLabel(themes[currentThemeIndex], SwingConstants.CENTER);
@@ -32,14 +32,14 @@ public class CustomMode {
 
         // Left button to change theme
         String themeLeftIconPath = "Previous Button.png";
-        JButton themeLeftBtn = createButton(themeLeftIconPath, 450, 305, (ActionEvent e) -> {
+        JButton themeLeftBtn = BaseGame.createButton(themeLeftIconPath, 500, 320, 63, 45, (ActionEvent e) -> {
             currentThemeIndex = (currentThemeIndex - 1 + themes.length) % themes.length;
             themeLabel.setText(themes[currentThemeIndex]);
         });
 
         // Right button to change theme
         String themeRightIconPath = "Next Button.png";
-        JButton themeRightBtn = createButton(themeRightIconPath, 670, 305, (ActionEvent e) -> {
+        JButton themeRightBtn = BaseGame.createButton(themeRightIconPath, 705, 320, 63, 43, (ActionEvent e) -> {
             currentThemeIndex = (currentThemeIndex + 1) % themes.length;
             themeLabel.setText(themes[currentThemeIndex]);
         });
@@ -48,53 +48,52 @@ public class CustomMode {
         difficultyLabel = new JLabel(difficulties[currentDifficultyIndex], SwingConstants.CENTER);
         difficultyLabel.setFont(textFont);
         difficultyLabel.setBounds(565, 430, 150, 30);
-        
+
         // Left button to change difficulty
         String difficultyLeftIconPath = "Previous Button.png";
-        JButton difficultyLeftBtn = createButton(difficultyLeftIconPath, 450, 400, (ActionEvent e) -> {
+        JButton difficultyLeftBtn = BaseGame.createButton(difficultyLeftIconPath, 500, 425, 63, 45, (ActionEvent e) -> {
             currentDifficultyIndex = (currentDifficultyIndex - 1 + difficulties.length) % difficulties.length;
             difficultyLabel.setText(difficulties[currentDifficultyIndex]);
         });
 
         // Right button to change difficulty
         String difficultyRightIconPath = "Next Button.png";
-        JButton difficultyRightBtn = createButton(difficultyRightIconPath, 670, 400, (ActionEvent e) -> {
+        JButton difficultyRightBtn = BaseGame.createButton(difficultyRightIconPath, 705, 425, 63, 43, (ActionEvent e) -> {
             currentDifficultyIndex = (currentDifficultyIndex + 1) % difficulties.length;
             difficultyLabel.setText(difficulties[currentDifficultyIndex]);
         });
 
         // Start Game Button
-        String okRightIconPath = "Level Selection Ok Button.png";
-        JButton okBtn = createButton(okRightIconPath, 700, 600, (ActionEvent e) -> {
-            setSelectedTheme(themes[currentThemeIndex]); // Save the selected theme
-            setSelectedDifficulty(difficulties[currentDifficultyIndex]); // Save the selected difficulty
-            System.out.println("Selected theme: " + selectedTheme); // Debugging log
-            System.out.println("Selected difficulty: " + selectedDifficulty); // Debugging log
+    String okRightIconPath = "Level Selection Ok Button.png";
+    JButton okBtn = BaseGame.createButton(okRightIconPath, 700, 600, 128, 50, (ActionEvent e) -> {
+        setSelectedTheme(themes[currentThemeIndex]); // Save the selected theme
+        setSelectedDifficulty(difficulties[currentDifficultyIndex]); // Save the selected difficulty
+        System.out.println("Selected theme: " + selectedTheme); // Debugging log
+        System.out.println("Selected difficulty: " + selectedDifficulty); // Debugging log
 
-            GameboardGameLogic gameboard = new GameboardGameLogic(selectedDifficulty);
-            // Dynamically rebuild the GameboardGameLogic panel
-            cardPanel.add(gameboard.createGameboardPanel(cardLayout, cardPanel), "Gameboard");
-            cardLayout.show(cardPanel, "Gameboard");
-        });
+        // Create the gameboard logic and panel
+        GameboardGameLogic gameboard = new GameboardGameLogic(selectedDifficulty);
+
+        // Create the new gameboard panel, passing the cardLayout and cardPanel for navigation
+        JPanel newGameboardPanel = gameboard.createGameboardPanel(cardLayout, cardPanel);
+
+        // Switch to the gameboard panel using CardLayout
+        cardPanel.add(newGameboardPanel, "Gameboard");
+        cardLayout.show(cardPanel, "Gameboard");
+    });
+
 
         // Cancel Button
         String backIconPath = "Level Selection Cancel Button.png";
-        JButton backButton = createButton(backIconPath, 500, 600, (ActionEvent e) -> {
-            cardLayout.show(cardPanel, "Main Menu");
+        JButton backButton = BaseGame.createButton(backIconPath, 500, 600, 128, 48, (ActionEvent e) -> {
+            System.exit(0); // Exit the application (for simplicity)
         });
 
-        // Custom Mode Background
-        File backgroundFile = new File("resources/images/custommodebg.png");
-        JLabel backgroundLabel;
-        if (backgroundFile.exists()) {
-            ImageIcon originalIcon = new ImageIcon(backgroundFile.getPath());
-            Image scaledImage = originalIcon.getImage().getScaledInstance(1000, 700, Image.SCALE_SMOOTH);
-            backgroundLabel = new JLabel(new ImageIcon(scaledImage));
-        } else {
-            backgroundLabel = new JLabel("Background image not found", SwingConstants.CENTER);
-            backgroundLabel.setForeground(Color.RED);
-        }
+        // Custom Mode Background 
+        JLabel backgroundLabel = new JLabel();
+        BaseGame.setBackground("resources/images/custommodebg.png", backgroundLabel, 1000, 700);
         backgroundLabel.setBounds(0, 0, 1000, 700);
+       
         
         // Adding components to the panel
         layeredPanel.add(themeLabel);
@@ -146,22 +145,4 @@ public class CustomMode {
         return null; // Return null if image is not found or can't be loaded
     }
 
-    // Helper method to create a button with an image icon and hover animation
-    private JButton createButton(String iconPath, int x, int y, ActionListener action) {
-        JButton button = new JButton();
-        final ImageIcon buttonImageIcon = loadImage(iconPath);
-        
-        button.setIcon(buttonImageIcon);
-        button.setText("");
-        button.setBounds(x, y, 150, 85); // size of hover 
-        button.setBorderPainted(false);
-        button.setFocusPainted(false);
-        button.setContentAreaFilled(false);
-        button.addActionListener(action);
-
-        // Apply the hover effect using Animations class
-        Animations.applyHoverEffect(button, buttonImageIcon);
-
-        return button;
-    }
 }

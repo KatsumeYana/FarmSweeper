@@ -155,9 +155,9 @@ public class Leaderboard {
         layeredPane.setLayout(null);
         
         // JTable and fonts for columns
-        Font headerFont = CustomFont.loadCustomFont("PressStart2P-Regular.ttf", 12);
-        Font textFont = CustomFont.loadCustomFont("PressStart2P-Regular.ttf", 10);
-        Font filterFont = CustomFont.loadCustomFont("PressStart2P-Regular.ttf", 16);
+        Font headerFont = BaseGame.loadCustomFont("PressStart2P-Regular.ttf", 12);
+        Font textFont = BaseGame.loadCustomFont("PressStart2P-Regular.ttf", 10);
+        Font filterFont = BaseGame.loadCustomFont("PressStart2P-Regular.ttf", 16);
         
         // Difficulty Selection
         JLabel difficultyLabel = new JLabel(difficulties[currentDifficultyIndex], SwingConstants.CENTER);
@@ -165,14 +165,14 @@ public class Leaderboard {
         difficultyLabel.setBounds(370, 175, 100, 30);
         // Left button to change difficulty
         String difficultyLeftIconPath = "Leaderboard Difficulty Previous Button.png";
-        JButton difficultyLeftBtn = createButton(difficultyLeftIconPath, 270, 160, 63, 64,(ActionEvent e) -> {
+        JButton difficultyLeftBtn = BaseGame.createButton(difficultyLeftIconPath, 270, 160, 63, 64,(ActionEvent e) -> {
             currentDifficultyIndex = (currentDifficultyIndex - 1 + difficulties.length) % difficulties.length;
             difficultyLabel.setText(difficulties[currentDifficultyIndex]);
         });
 
         // Right button to change difficulty
         String difficultyRightIconPath = "Leaderboard Difficulty Next Button.png";
-        JButton difficultyRightBtn = createButton(difficultyRightIconPath, 510, 160, 63, 64,(ActionEvent e) -> {
+        JButton difficultyRightBtn = BaseGame.createButton(difficultyRightIconPath, 510, 160, 63, 64,(ActionEvent e) -> {
             currentDifficultyIndex = (currentDifficultyIndex + 1) % difficulties.length;
             difficultyLabel.setText(difficulties[currentDifficultyIndex]);
         });
@@ -183,7 +183,7 @@ public class Leaderboard {
         
         //OK Button
         String okRightIconPath = "Leaderboard  Difficulty Ok Button.png";
-        JButton okBtn = createButton(okRightIconPath, 650, 170, 92, 41, (ActionEvent e) -> {
+        JButton okBtn = BaseGame.createButton(okRightIconPath, 650, 170, 92, 41, (ActionEvent e) -> {
             // Filter the leaderboard based on the selected difficulty
             selectedDifficulty = difficulties[currentDifficultyIndex].toLowerCase();  // Ensure it matches the database
             filterLeaderboardByDifficulty(selectedDifficulty);
@@ -192,7 +192,7 @@ public class Leaderboard {
         
         // Home Button
         String backIconPath = "back.png"; 
-        JButton backButton = createButton(backIconPath, 20, 10, 70, 38, (ActionEvent e) -> {
+        JButton backButton = BaseGame.createButton(backIconPath, 20, 10, 70, 38, (ActionEvent e) -> {
             cardLayout.show(cardPanel, "Main Menu");
             System.out.println("You pressed home button");
 
@@ -305,24 +305,7 @@ public class Leaderboard {
     }
 
 
-    // Helper method to create a button with image icon and hover effect
-    private JButton createButton(String iconPath, int x, int y, int z, int w, ActionListener action) {
-        JButton button = new JButton();
-        final ImageIcon buttonImageIcon = loadImage(iconPath);
-
-        button.setIcon(buttonImageIcon);
-        button.setText("");
-        button.setBounds(x, y, z, w);
-        button.setBorderPainted(false);
-        button.setFocusPainted(false);
-        button.setContentAreaFilled(false);
-        button.addActionListener(action);
-
-        // Apply the hover effect using Animations class
-        Animations.applyHoverEffect(button, buttonImageIcon);
-
-        return button;
-    }
+   
 
     
 }

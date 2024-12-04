@@ -7,7 +7,6 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import javax.imageio.ImageIO;
-import javax.swing.border.Border;
 
 public class CustomGameWin {
 
@@ -26,11 +25,11 @@ public class CustomGameWin {
         setTurnsTaken(turnsTaken);
         setDifficulty(difficulty);
 
-        FadingPanel panel = new FadingPanel(null);
+        JPanel panel = new JPanel(null);
         panel.setOpaque(false);
 
         // Font
-        Font textfont = CustomFont.loadCustomFont("PressStart2P-Regular.ttf", 12);
+        Font textfont = BaseGame.loadCustomFont("PressStart2P-Regular.ttf", 12);
 
         // Input Name Field with Placeholder
         JTextField inputName = new JTextField("Enter name");
@@ -116,7 +115,7 @@ public class CustomGameWin {
         panel.add(winImageLabel, Integer.valueOf(0));
 
         // Apply fade-in animation
-        Animations.fadeIn(panel, 10000);  // Fade in the win panel over 2 seconds
+        BaseGame.fadeIn(panel, 10000);  // Fade in the win panel over 2 seconds
 
         return panel;
     }
@@ -134,7 +133,7 @@ public class CustomGameWin {
         button.addActionListener(action);
 
         // Apply the hover effect using Animations class
-        Animations.applyHoverEffect(button, buttonImageIcon);
+        BaseGame.applyHoverEffect(button, buttonImageIcon);
         
         return button;
     }
