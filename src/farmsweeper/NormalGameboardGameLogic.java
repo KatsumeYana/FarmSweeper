@@ -1,137 +1,115 @@
 package farmsweeper;
 
+import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.util.ArrayList;
 import java.util.Random;
-import javax.swing.*;
 
 public class NormalGameboardGameLogic extends JPanel {
-    private class MineTile extends JButton {
-        int r, c;
 
-        public MineTile(int r, int c) {
-            this.r = r;
-            this.c = c;
-        }
-    }
-
-    private int tileSize = 50; // Default tile size
+    private int tileSize = 50;
     private int numRows, numCols, mineCount;
-    private int[] boardBounds;
-    private JLabel textLabel = new JLabel();
-    private JLabel timerLabel = new JLabel();
-    private JLabel turnLabel = new JLabel();
-    private JPanel boardPanel = new JPanel() {
-        @Override
-        protected void paintComponent(Graphics g) {
-            super.paintComponent(g);
-            if (backgroundImage != null) {
-                g.drawImage(backgroundImage, 0, 0, getWidth(), getHeight(), this);
-            }
-        }
-    };
-    private MineTile[][] board;
-    private ArrayList<MineTile> mineList;
+    private JPanel boardPanel = new JPanel();
+    private NormalMineTile[][] board;
+    private ArrayList<NormalMineTile> mineList;
     private Random random = new Random();
-    private int tilesClicked = 0;
     private boolean gameOver = false;
     private boolean firstClick = true;
+    private int tilesClicked = 0;
+    private JLabel timerLabel;
+    private JLabel turnLabel;
     private int turnCounter = 0;
     private Timer timer;
     private int elapsedTime = 0;
     private Image backgroundImage;
+    private int level;
+    private String theme;
 
-    public NormalGameboardGameLogic(int difficulty, int level, CardLayout cardLayout, JPanel cardPanel) {
-    configureLevel(level, difficulty);
-    setBackgroundForDifficulty(difficulty);
-    setLayout(new BorderLayout());
+    // Constructor for initializing the gameboard logic based on the level and theme
+    public NormalGameboardGameLogic(int level, CardLayout cardLayout, JPanel cardPanel, String theme) {
+        this.level = level;
+        this.theme = theme;
+        configureLevel(level);
+        setBackgroundForLevel();
+        setLayout(new BorderLayout());
 
-    // Create and add the info panel (existing code)
-    JPanel infoPanel = new JPanel(new GridLayout(1, 3));
-    textLabel.setFont(new Font("Arial", Font.BOLD, 20));
-    textLabel.setHorizontalAlignment(JLabel.CENTER);
-    textLabel.setText("Minesweeper: " + mineCount + " mines");
-    timerLabel.setFont(new Font("Arial", Font.BOLD, 20));
-    timerLabel.setHorizontalAlignment(JLabel.CENTER);
-    timerLabel.setText("Time: 0s");
-    turnLabel.setFont(new Font("Arial", Font.BOLD, 20));
-    turnLabel.setHorizontalAlignment(JLabel.CENTER);
-    turnLabel.setText("Turns: 0");
-    infoPanel.add(textLabel);
-    infoPanel.add(timerLabel);
-    infoPanel.add(turnLabel);
-    add(infoPanel, BorderLayout.NORTH);
+        JPanel infoPanel = new JPanel(new GridLayout(1, 3));
+        infoPanel.setOpaque(false);
 
-    // Create and add the board panel
-    boardPanel.setLayout(new GridLayout(numRows, numCols));
-    add(boardPanel, BorderLayout.CENTER);
+        timerLabel = new JLabel("Time: 0");
+        timerLabel.setFont(new Font("Arial", Font.BOLD, 20));
+        timerLabel.setHorizontalAlignment(SwingConstants.CENTER);
 
-    initializeBoard();
-    setMines();
+        turnLabel = new JLabel("Turns: 0");
+        turnLabel.setFont(new Font("Arial", Font.BOLD, 20));
+        turnLabel.setHorizontalAlignment(SwingConstants.CENTER);
 
-    // Create and add the back button
-    JButton backButton = new JButton("Back to Level Selection");
-    backButton.addActionListener(e -> {
-        if (timer != null) {
-            timer.stop();
+        infoPanel.add(timerLabel);
+        infoPanel.add(turnLabel);
+
+        add(infoPanel, BorderLayout.NORTH);
+
+        // Set up the boardPanel with FlowLayout for centering tiles
+        boardPanel.setLayout(new FlowLayout(FlowLayout.CENTER, 5, 5));  // Adjust spacing here
+        add(boardPanel, BorderLayout.CENTER);
+
+        initializeBoard();
+        setMines();
+
+        JButton backButton = new JButton("Back to Level Selection");
+        backButton.addActionListener(e -> {
+            if (timer != null) {
+                timer.stop();
+            }
+            cardLayout.show(cardPanel, "LevelSelection");
+        });
+        add(backButton, BorderLayout.SOUTH);
+
+        // Dynamically adjust the game size
+        setPreferredSize(new Dimension(numCols * tileSize + 30, numRows * tileSize + 150));
+    }
+
+    private void configureLevel(int level) {
+        if (level >= 1 && level <= 3) {
+            numRows = 8;
+            numCols = 8;
+            mineCount = switch (level) {
+                case 1 -> 5;
+                case 2 -> 10;
+                case 3 -> 15;
+                default -> 5;
+            };
+        } else if (level >= 4 && level <= 6) {
+            numRows = 16;
+            numCols = 16;
+            mineCount = switch (level) {
+                case 4 -> 24;
+                case 5 -> 40;
+                case 6 -> 56;
+                default -> 24;
+            };
+        } else if (level >= 7 && level <= 9) {
+            numRows = 30;
+            numCols = 16;
+            mineCount = switch (level) {
+                case 7 -> 64;
+                case 8 -> 80;
+                case 9 -> 99;
+                default -> 64;
+            };
         }
-        cardLayout.show(cardPanel, "LevelSelection");
-    });
-    add(backButton, BorderLayout.SOUTH);
-
-    setPreferredSize(new Dimension(numCols * tileSize + 50, numRows * tileSize + 150));
-}
-
-
-    private void configureLevel(int level, int difficulty) {
-        switch (difficulty) {
-            case 1 -> { // Easy
-                numRows = 8;
-                numCols = 8;
-                mineCount = switch (level) {
-                    case 1 -> 5;
-                    case 2 -> 10;
-                    case 3 -> 15;
-                    default -> 5;
-                };
-                boardBounds = new int[]{200, 160, 350, 350};
-            }
-            case 2 -> { // Normal
-                numRows = 16;
-                numCols = 16;
-                mineCount = switch (level) {
-                    case 1 -> 24;
-                    case 2 -> 40;
-                    case 3 -> 56;
-                    default -> 24;
-                };
-                boardBounds = new int[]{210, 160, 500, 500};
-            }
-            case 3 -> { // Hard
-                numRows = 30;
-                numCols = 16;
-                mineCount = switch (level) {
-                    case 1 -> 64;
-                    case 2 -> 80;
-                    case 3 -> 99;
-                    default -> 64;
-                };
-                boardBounds = new int[]{45, 160, 900, 500};
-            }
-        }
-
-        // Dynamically adjust tile size
         tileSize = Math.min(50, 500 / Math.max(numRows, numCols));
     }
 
-    private void setBackgroundForDifficulty(int difficulty) {
-        String imagePath = switch (difficulty) {
-            case 1 -> "/resources/Spring.png";
-            case 2 -> "/resources/Summer.png";
-            case 3 -> "/resources/Autumn.png";
+    private void setBackgroundForLevel() {
+        String imagePath = switch (level) {
+            case 1, 2, 3 -> "/images/Spring.png"; // Use path relative to resources folder
+            case 4, 5, 6 -> "/images/Summer.png"; 
+            case 7, 8, 9 -> "/images/Autumn.png";  
             default -> null;
         };
+
         if (imagePath != null) {
             try {
                 backgroundImage = new ImageIcon(getClass().getResource(imagePath)).getImage();
@@ -143,22 +121,22 @@ public class NormalGameboardGameLogic extends JPanel {
     }
 
     private void initializeBoard() {
-        board = new MineTile[numRows][numCols];
+        board = new NormalMineTile[numRows][numCols];
         for (int r = 0; r < numRows; r++) {
             for (int c = 0; c < numCols; c++) {
-                MineTile tile = new MineTile(r, c);
+                NormalMineTile tile = new NormalMineTile(r, c, theme);
                 board[r][c] = tile;
-                tile.setFont(new Font("Arial Unicode MS", Font.PLAIN, 18));
                 tile.setPreferredSize(new Dimension(tileSize, tileSize));
                 tile.addMouseListener(new MouseAdapter() {
                     @Override
                     public void mousePressed(MouseEvent e) {
                         if (gameOver) return;
-                        MineTile t = (MineTile) e.getSource();
+
+                        NormalMineTile t = (NormalMineTile) e.getSource();
                         turnCounter++;
                         turnLabel.setText("Turns: " + turnCounter);
 
-                        if (e.getButton() == MouseEvent.BUTTON1) { // Left-click
+                        if (e.getButton() == MouseEvent.BUTTON1) {
                             if (firstClick) {
                                 ensureSafeFirstClick(t.r, t.c);
                                 startTimer();
@@ -169,7 +147,7 @@ public class NormalGameboardGameLogic extends JPanel {
                             } else {
                                 checkMine(t.r, t.c);
                             }
-                        } else if (e.getButton() == MouseEvent.BUTTON3) { // Right-click
+                        } else if (e.getButton() == MouseEvent.BUTTON3) {
                             if (t.getText().isEmpty()) {
                                 t.setText("🚩");
                             } else if (t.getText().equals("🚩")) {
@@ -188,7 +166,7 @@ public class NormalGameboardGameLogic extends JPanel {
         while (mineList.size() < mineCount) {
             int r = random.nextInt(numRows);
             int c = random.nextInt(numCols);
-            MineTile tile = board[r][c];
+            NormalMineTile tile = board[r][c];
             if (!mineList.contains(tile)) {
                 mineList.add(tile);
             }
@@ -196,10 +174,10 @@ public class NormalGameboardGameLogic extends JPanel {
     }
 
     private void ensureSafeFirstClick(int r, int c) {
-        MineTile firstTile = board[r][c];
+        NormalMineTile firstTile = board[r][c];
         if (mineList.contains(firstTile)) {
             mineList.remove(firstTile);
-            MineTile newMine;
+            NormalMineTile newMine;
             do {
                 int newR = random.nextInt(numRows);
                 int newC = random.nextInt(numCols);
@@ -224,23 +202,35 @@ public class NormalGameboardGameLogic extends JPanel {
     }
 
     private void revealMines() {
-        for (MineTile mine : mineList) {
+        for (NormalMineTile mine : mineList) {
             mine.setText("💣");
         }
         gameOver = true;
-        textLabel.setText("Game Over!");
+        displayGameOverScreen("You Lose!");
         stopTimer();
+    }
+
+    private void displayGameOverScreen(String message) {
+        JPanel gameOverPanel = new JPanel();
+        gameOverPanel.setLayout(new BorderLayout());
+        JLabel gameOverLabel = new JLabel(message, SwingConstants.CENTER);
+        gameOverLabel.setFont(new Font("Arial", Font.BOLD, 30));
+        gameOverPanel.add(gameOverLabel, BorderLayout.CENTER);
+        add(gameOverPanel, BorderLayout.CENTER);
+        revalidate();
+        repaint();
     }
 
     private void checkMine(int r, int c) {
         if (r < 0 || r >= numRows || c < 0 || c >= numCols) return;
-        MineTile tile = board[r][c];
+
+        NormalMineTile tile = board[r][c];
         if (!tile.isEnabled()) return;
 
         tile.setEnabled(false);
         tilesClicked++;
-        int minesFound = 0;
 
+        int minesFound = 0;
         for (int dr = -1; dr <= 1; dr++) {
             for (int dc = -1; dc <= 1; dc++) {
                 if (dr != 0 || dc != 0) minesFound += countMine(r + dr, c + dc);
@@ -258,8 +248,8 @@ public class NormalGameboardGameLogic extends JPanel {
         }
 
         if (tilesClicked == numRows * numCols - mineCount) {
-            textLabel.setText("You Win!");
             gameOver = true;
+            displayGameOverScreen("You Win!");
             stopTimer();
         }
     }
