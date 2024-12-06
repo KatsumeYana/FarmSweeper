@@ -82,7 +82,7 @@ public class CustomGameWin {
         String retryButtonIconPath = "Retry Button.png"; 
         JButton retryButton = BaseGame.createButton(retryButtonIconPath, 285, 420, 69, 63, e -> {
             // Reset the gameboard state with the selected difficulty
-            GameboardGameLogic gameboardLogic = new GameboardGameLogic(selectedDifficulty);
+            CustomGameboardGameLogic gameboardLogic = new CustomGameboardGameLogic(selectedDifficulty);
             JPanel newGameboardPanel = gameboardLogic.createGameboardPanel(cardLayout, cardPanel);
             cardPanel.add(newGameboardPanel, "Gameboard");
             cardLayout.show(cardPanel, "Gameboard");

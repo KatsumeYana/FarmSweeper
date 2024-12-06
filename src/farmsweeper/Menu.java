@@ -3,9 +3,6 @@ package farmsweeper;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
-import javax.imageio.ImageIO;
-import java.awt.image.BufferedImage;
-import java.io.*;
 import java.sql.*;
 
 public class Menu extends JFrame {
@@ -21,6 +18,9 @@ public class Menu extends JFrame {
     private final int timeElapsed = 0;
     private final int turnCounter = 0;
     private final String selectedDifficulty = "Normal";
+    private final int level=1;
+    
+    private Connection conn;
 
     // Constructor
     public Menu() {
@@ -30,25 +30,37 @@ public class Menu extends JFrame {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
 
-        // Test database connection on start
-        if (isDatabaseConnected()) {
-            JOptionPane.showMessageDialog(null, "Database connected successfully!", "Connection Status", JOptionPane.INFORMATION_MESSAGE);
-        } else {
-            JOptionPane.showMessageDialog(null, "Failed to connect to the database.", "Connection Status", JOptionPane.ERROR_MESSAGE);
+        this.cardLayout = new CardLayout();
+        this.cardPanel = new JPanel(cardLayout);
+
+        // Initialize the connection here
+        conn = DatabaseConnection.getConnection();  // Get the connection from DatabaseConnection
+
+        if (conn == null) {
+            JOptionPane.showMessageDialog(this, "Failed to connect to the database.", "Database Error", JOptionPane.ERROR_MESSAGE);
+            return;
         }
 
-        cardLayout = new CardLayout();
-        cardPanel = new JPanel(cardLayout);
 
         // Panels for different modes
         JPanel mainMenuPanel = createMainMenuPanel();
-        NormalMode normalModePanelClass = new NormalMode();
-        JPanel normalModePanel = normalModePanelClass.createNormalModePanel(cardLayout, cardPanel);
+        
+        
+        NormalMode normalMode = new NormalMode(cardLayout, cardPanel, conn);  // Pass the connection here
+        JPanel normalModePanel = normalMode.createNormalModePanel();  // Create the panel
+        
+         // Create and pass the connection to NormalWin
+        NormalWin normalWin = new NormalWin(level, timeElapsed, turnCounter, cardLayout, cardPanel);  // Pass conn here
+        JPanel normalWinPanel = normalWin.createWinPanel();  // Pass cardLayout and cardPanel for navigation
+            
+        // Add the win panel to the card panel
+        cardPanel.add(normalWinPanel, "Normal Win");
+
 
         CustomMode customModePanelClass = new CustomMode();
         JPanel customModePanel = customModePanelClass.createCustomModePanel(cardLayout, cardPanel);
 
-        GameboardGameLogic gameboardLogic = new GameboardGameLogic("Normal");
+        CustomGameboardGameLogic gameboardLogic = new CustomGameboardGameLogic("Normal");
         JPanel gameboardPanel = gameboardLogic.createGameboardPanel(cardLayout, cardPanel);
 
         // Leaderboard Panel

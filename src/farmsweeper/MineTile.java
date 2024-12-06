@@ -2,6 +2,7 @@ package farmsweeper;
 
 import javax.swing.*;
 import java.awt.*;
+import java.io.File;
 
 public class MineTile extends JButton {
     int r, c;
@@ -9,6 +10,7 @@ public class MineTile extends JButton {
     boolean isRevealed;
     boolean isMine;
     private JLabel tileLabel;
+    private final String theme;
 
     public MineTile(int r, int c, String theme) {
         this.r = r;
@@ -16,6 +18,7 @@ public class MineTile extends JButton {
         this.isFlagged = false;
         this.isRevealed = false;
         this.isMine = false;
+        this.theme = theme;
 
         // Create the label for the tile's image
         tileLabel = new JLabel();
@@ -64,8 +67,7 @@ public class MineTile extends JButton {
         }
 
         // Set the image icon for the tile
-        ImageIcon tileIcon = new ImageIcon(tileImagePath);
-        tileLabel.setIcon(tileIcon);
+        tileLabel.setIcon(loadImage(tileImagePath));  // Load image with fallback
         tileLabel.setHorizontalAlignment(SwingConstants.CENTER);
         tileLabel.setVerticalAlignment(SwingConstants.CENTER);
     }
@@ -93,8 +95,7 @@ public class MineTile extends JButton {
             default -> "none";
         };
         // Set the flagged image
-        ImageIcon flaggedIcon = new ImageIcon(cropImagePath);
-        tileLabel.setIcon(flaggedIcon);
+        tileLabel.setIcon(loadImage(cropImagePath));
         tileLabel.setHorizontalAlignment(SwingConstants.CENTER);
         tileLabel.setVerticalAlignment(SwingConstants.CENTER);
     }
@@ -103,8 +104,7 @@ public class MineTile extends JButton {
     public void setFlag(String theme) {
         isFlagged = true;
         String flaggedImagePath = getFlaggedImagePath(theme);
-        ImageIcon flaggedIcon = new ImageIcon(flaggedImagePath);
-        tileLabel.setIcon(flaggedIcon);
+        tileLabel.setIcon(loadImage(flaggedImagePath));
         tileLabel.setHorizontalAlignment(SwingConstants.CENTER);
         tileLabel.setVerticalAlignment(SwingConstants.CENTER);
     }
@@ -123,5 +123,16 @@ public class MineTile extends JButton {
             case "Autumn" -> "resources/images/autumnTileFlagged.gif";
             default -> "resources/images/springTileFlagged.gif";
         };
+    }
+
+    // Helper method to load images with fallback
+    private ImageIcon loadImage(String imagePath) {
+        File imgFile = new File(imagePath);
+        if (imgFile.exists()) {
+            return new ImageIcon(imagePath);
+        } else {
+            System.err.println("Image not found: " + imagePath);
+            return new ImageIcon("resources/images/defaultTile.gif");  // Fallback image
+        }
     }
 }

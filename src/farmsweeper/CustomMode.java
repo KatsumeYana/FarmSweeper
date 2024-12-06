@@ -3,9 +3,6 @@ package farmsweeper;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
-import java.awt.image.BufferedImage;
-import java.io.*;
-import javax.imageio.ImageIO;
 
 
 public class CustomMode {
@@ -72,7 +69,7 @@ public class CustomMode {
         System.out.println("Selected difficulty: " + selectedDifficulty); // Debugging log
 
         // Create the gameboard logic and panel
-        GameboardGameLogic gameboard = new GameboardGameLogic(selectedDifficulty);
+        CustomGameboardGameLogic gameboard = new CustomGameboardGameLogic(selectedDifficulty);
 
         // Create the new gameboard panel, passing the cardLayout and cardPanel for navigation
         JPanel newGameboardPanel = gameboard.createGameboardPanel(cardLayout, cardPanel);

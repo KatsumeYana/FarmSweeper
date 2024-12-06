@@ -7,7 +7,7 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.Random;
 
-public class GameboardGameLogic {
+public class CustomGameboardGameLogic {
 
     private int numRows;
     private int numCols;
@@ -28,7 +28,7 @@ public class GameboardGameLogic {
     private int turnCounter = 0;
     private final String selectedDifficulty;
 
-    public GameboardGameLogic(String difficulty) {
+    public CustomGameboardGameLogic(String difficulty) {
         this.selectedDifficulty = difficulty;
         setDifficulty(difficulty);
     }
@@ -110,7 +110,7 @@ public class GameboardGameLogic {
 
             // Retry Button
             JButton retryButton = BaseGame.createButton("Retry Button.png", 800, 10, 70, 63, (ActionEvent e) -> {
-                GameboardGameLogic gameboardLogic = new GameboardGameLogic(selectedDifficulty);
+                CustomGameboardGameLogic gameboardLogic = new CustomGameboardGameLogic(selectedDifficulty);
                 JPanel newGameboardPanel = gameboardLogic.createGameboardPanel(cardLayout, cardPanel);
                 cardPanel.add(newGameboardPanel, "Gameboard");
                 cardLayout.show(cardPanel, "Gameboard");

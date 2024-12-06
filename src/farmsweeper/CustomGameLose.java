@@ -43,7 +43,7 @@ public class CustomGameLose {
         JButton retryButton = BaseGame.createButton("Retry Button.png", 250, 385, 69, 63, e -> {
             // Get the selected difficulty from CustomMode
             String difficulty = CustomMode.getSelectedDifficulty();
-            GameboardGameLogic gameboardLogic = new GameboardGameLogic(difficulty);
+            CustomGameboardGameLogic gameboardLogic = new CustomGameboardGameLogic(difficulty);
             JPanel newGameboardPanel = gameboardLogic.createGameboardPanel(cardLayout, cardPanel);
             cardPanel.add(newGameboardPanel, "Gameboard");
             cardLayout.show(cardPanel, "Gameboard");
